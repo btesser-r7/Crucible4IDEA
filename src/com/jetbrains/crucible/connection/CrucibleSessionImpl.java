@@ -13,7 +13,6 @@ import com.jetbrains.crucible.connection.exceptions.CrucibleApiLoginException;
 import com.jetbrains.crucible.model.*;
 import com.jetbrains.crucible.ui.UiUtils;
 import git4idea.GitUtil;
-import git4idea.commands.GitRemoteProtocol;
 import git4idea.repo.GitRemote;
 import git4idea.repo.GitRepository;
 import git4idea.repo.GitRepositoryManager;
@@ -302,22 +301,18 @@ public class CrucibleSessionImpl implements CrucibleSession {
 
   @Nullable
   private static String unifyLocation(@NotNull String location) {
-    final GitRemoteProtocol protocol = GitRemoteProtocol.fromUrl(location);
-    if (protocol == null) return null;
-    switch (protocol) {
-      case GIT:
-        return StringUtil.trimEnd(StringUtil.trimStart(location, "git://"), ".git");
-      case HTTP:
-        Pattern pattern = Pattern.compile("https?://(.*)\\.git");
-        Matcher matcher = pattern.matcher(location);
-        boolean found = matcher.find();
-        return found ? matcher.group(1) : null;
-      case SSH:
+    if (location.contains("git://")) {
+      return StringUtil.trimEnd(StringUtil.trimStart(location, "git://"), ".git");
+    } else if (location.contains('http')) {
+      Pattern pattern = Pattern.compile("https?://(.*)\\.git");
+      Matcher matcher = pattern.matcher(location);
+      boolean found = matcher.find();
+      return found ? matcher.group(1) : null;
+    } else if (location.contains('git@') {
         pattern = Pattern.compile("git@(.*)?:(.*)(\\.git)?");
         matcher = pattern.matcher(location);
         found = matcher.find();
         return found ? matcher.group(1) + "/" + matcher.group(2) : null;
-      default:
     }
     return null;
   }
